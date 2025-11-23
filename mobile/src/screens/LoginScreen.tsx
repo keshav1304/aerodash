@@ -36,6 +36,18 @@ export default function LoginScreen({ navigation }: any) {
         body: JSON.stringify({ email, password }),
       })
 
+      if (!response.ok) {
+        let errorMessage = `Server error: ${response.status}`
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (e) {
+          errorMessage = `Server returned ${response.status}: ${response.statusText}`
+        }
+        Alert.alert('Error', errorMessage)
+        return
+      }
+
       const data = await response.json()
 
       if (response.ok) {
@@ -43,8 +55,10 @@ export default function LoginScreen({ navigation }: any) {
       } else {
         Alert.alert('Error', data.error || 'Login failed')
       }
-    } catch (error) {
-      Alert.alert('Error', 'Network error. Please check your connection.')
+    } catch (error: any) {
+      console.error('Login error:', error)
+      const errorMessage = error?.message || 'Network error. Please check your connection.'
+      Alert.alert('Error', `Connection failed: ${errorMessage}`)
     } finally {
       setLoading(false)
     }

@@ -4,14 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "next": "^14.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "@prisma/client": "^5.7.0",
+    "@prisma/adapter-libsql": "^5.7.0",
+    "@libsql/client": "^0.14.0",
     "prisma": "^5.7.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",

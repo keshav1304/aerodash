@@ -49,9 +49,17 @@ export default async function handler(
         phone: user.phone,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name,
+    })
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+    })
   }
 }
 

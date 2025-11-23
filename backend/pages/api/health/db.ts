@@ -20,42 +20,50 @@ export default async function handler(
     // Test database connection
     await prisma.$connect()
     
-    // Check if TravelerListing table exists and has correct schema
-    const sample = await prisma.$queryRaw`
-      SELECT sql FROM sqlite_master 
-      WHERE type='table' AND name='TravelerListing'
-    ` as any[]
+    // Simple query to test connection (works with both SQLite and Turso)
+    const userCount = await prisma.user.count()
     
-    const tableInfo = await prisma.$queryRaw`
-      PRAGMA table_info(TravelerListing)
-    ` as any[]
-
-    const hasArrivalTime = tableInfo.some((col: any) => col.name === 'arrivalTime')
-    const arrivalTimeNullable = tableInfo.find((col: any) => col.name === 'arrivalTime')?.notnull === 0
+    // Try to get table info (may not work with Turso, so we'll catch errors)
+    let schemaInfo: any = {}
+    try {
+      const sample = await prisma.$queryRaw`
+        SELECT sql FROM sqlite_master 
+        WHERE type='table' AND name='TravelerListing'
+      ` as any[]
+      
+      schemaInfo.hasTravelerListingTable = sample.length > 0
+    } catch (e) {
+      // PRAGMA might not work with Turso, that's okay
+      schemaInfo.hasTravelerListingTable = 'unknown'
+    }
 
     res.status(200).json({
       status: 'ok',
       database: 'connected',
-      schema: {
-        hasTravelerListingTable: sample.length > 0,
-        hasArrivalTimeColumn: hasArrivalTime,
-        arrivalTimeIsNullable: arrivalTimeNullable,
-        columns: tableInfo.map((col: any) => ({
-          name: col.name,
-          type: col.type,
-          notnull: col.notnull,
-        })),
-      },
+      userCount,
+      databaseUrl: process.env.DATABASE_URL?.startsWith('libsql://') ? 'Turso' : 'SQLite',
+      schema: schemaInfo,
     })
   } catch (error: any) {
     console.error('Database health check error:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name,
+      stack: error?.stack,
+    })
     res.status(500).json({
       status: 'error',
-      error: error?.message,
+      error: error?.message || 'Database connection failed',
+      code: error?.code,
       details: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
     })
   } finally {
-    await prisma.$disconnect()
+    try {
+      await prisma.$disconnect()
+    } catch (e) {
+      // Ignore disconnect errors
+    }
   }
 }
 

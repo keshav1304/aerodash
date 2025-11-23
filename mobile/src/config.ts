@@ -1,9 +1,9 @@
-// Update this to your backend URL
-// For local development with Expo, use your computer's IP address
-// e.g., 'http://192.168.1.100:3000'
-export const API_BASE_URL = 'https://aerodash2.vercel.app/'
+// Backend API URL
+// Using Vercel deployment for all environments (including dev mode)
+// This allows Expo Go on physical devices to connect to the backend
+export const API_BASE_URL = 'https://aerodash2.vercel.app'
 
-// __DEV__ 
-//   ? 'http://localhost:3000' 
-//   : 'http://10.103.191.17:3000'
 
+ // // __DEV__ 
+  // //   ? 'http://localhost:3000' 
+  // //   : 'http://10.103.191.17:3000'
