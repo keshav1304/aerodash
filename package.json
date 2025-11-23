@@ -1,0 +1,21 @@
+{
+  "name": "aerodash-app",
+  "version": "1.0.0",
+  "description": "AeroDash - Connect travelers with package senders",
+  "scripts": {
+    "dev": "cd backend && npm run dev",
+    "mobile": "cd mobile && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../mobile && npm install"
+  },
+  "keywords": [
+    "aerodash",
+    "luggage",
+    "sharing",
+    "travel"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@react-native-community/datetimepicker": "^8.5.0"
+  }
+}

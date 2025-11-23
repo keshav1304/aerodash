@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  travelerListings TravelerListing[]
+  senderListings   SenderListing[]
+  receiverListings SenderListing[] @relation("ReceiverListings")
+  matchesAsTraveler Match[] @relation("TravelerMatches")
+  matchesAsSender   Match[] @relation("SenderMatches")
+  matchesAsReceiver Match[] @relation("ReceiverMatches")
+  issueReports      IssueReport[]
+}
+
+model TravelerListing {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originAirport   String   // Airport code (e.g., JFK, LAX)
+  destinationAirport String // Airport code
+  flightNumber    String?
+  departureTime   DateTime
+  arrivalTime     DateTime
+  availableWeight Float
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  matches         Match[]
+}
+
+model SenderListing {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receiverEmail   String?  // Email of the package receiver
+  receiverId      String?  // ID of receiver user if they have an account
+  receiver        User?    @relation("ReceiverListings", fields: [receiverId], references: [id])
+  originAirport   String   // Airport code
+  destinationAirport String // Airport code
+  packageWeight   Float
+  packageType     String   // "carry-on", "checked", or "either"
+  description     String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  matches         Match[]
+}
+
+model Match {
+  id              String   @id @default(cuid())
+  travelerListingId String
+  travelerListing   TravelerListing @relation(fields: [travelerListingId], references: [id], onDelete: Cascade)
+  senderListingId   String
+  senderListing     SenderListing @relation(fields: [senderListingId], references: [id], onDelete: Cascade)
+  travelerId        String
+  traveler           User   @relation("TravelerMatches", fields: [travelerId], references: [id])
+  senderId           String
+  sender             User   @relation("SenderMatches", fields: [senderId], references: [id])
+  receiverId         String?
+  receiver           User?  @relation("ReceiverMatches", fields: [receiverId], references: [id])
+  status            String  @default("pending") // pending, accepted, rejected, completed
+  dropOffCompleted  Boolean @default(false) // Origin drop-off by sender
+  pickUpCompleted   Boolean @default(false) // Origin pick-up by traveler
+  destinationDropOffCompleted Boolean @default(false) // Destination drop-off by traveler
+  destinationPickUpCompleted  Boolean @default(false) // Destination pick-up by sender
+  notificationSent  Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  issueReports      IssueReport[]
+}
+
+model IssueReport {
+  id              String   @id @default(cuid())
+  matchId         String
+  match           Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  reportedById    String
+  reportedBy      User    @relation(fields: [reportedById], references: [id])
+  description     String
+  status          String  @default("open") // open, resolved, closed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
